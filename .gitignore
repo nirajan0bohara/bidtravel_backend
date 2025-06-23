@@ -1,0 +1,21 @@
+# Dependencies
+node_modules
+
+# Logs
+logs/
+*.log
+
+# Environment variables
+.env*
+
+# Optional
+.vscode/
+.idea/
+.DS_Store
+npm-debug.log*
+*.seed
+*.pid
+*.pid.lock
+.npm
+.eslintcache
+.node_repl_historynode_modules

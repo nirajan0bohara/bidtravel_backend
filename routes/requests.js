@@ -1,12 +1,15 @@
-const express = require('express');
-const { createRequest, getUserRequests, getRequestsByLocation } = require('../controllers/RequestController');
-const { authMiddleware } = require('../middlewares/auth');
-const { validateRequest } = require('../middlewares/validate');
+const express = require("express");
+const {
+  createRequest,
+  getUserRequests,
+  getRequestsByLocation,
+} = require("../controllers/RequestController");
+const { validateRequest } = require("../middlewares/validate");
 
 const router = express.Router();
 
-router.post('/', authMiddleware, validateRequest, createRequest);
-router.get('/user', authMiddleware, getUserRequests);
-router.get('/location', authMiddleware, getRequestsByLocation);
+router.post("/", validateRequest, createRequest);
+router.get("/user", getUserRequests);
+router.get("/location", getRequestsByLocation);
 
 module.exports = { requestRouter: router };

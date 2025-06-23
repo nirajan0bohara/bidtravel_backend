@@ -7,7 +7,7 @@
 //   register: async (req, res) => {
 //     try {
 //       const { email, password, role } = req.body;
-      
+
 //       const existingUser = await User.findOne({ where: { email } });
 //       if (existingUser) {
 //         return res.status(400).json({ message: 'Email already exists' });
@@ -21,8 +21,8 @@
 //         status: role === roles.AGENCY ? 'pending' : 'approved'
 //       });
 
-//       res.status(201).json({ 
-//         id: user.id, 
+//       res.status(201).json({
+//         id: user.id,
 //         email: user.email,
 //         role: user.role
 //       });
@@ -50,7 +50,7 @@
 //         { expiresIn: '1d' }
 //       );
 
-//       res.json({ 
+//       res.json({
 //         token,
 //         user: { id: user.id, email: user.email, role: user.role }
 //       });
@@ -60,9 +60,9 @@
 //   }
 // };
 
-
-const { AuthService } = require('../services/AuthService');
-const { RESPONSE_MESSAGES } = require('../utils/constants');
+const { AuthService } = require("../services/AuthService");
+const { RESPONSE_MESSAGES } = require("../utils/constants");
+const bcrypt = require("bcrypt");
 
 exports.login = async (req, res) => {
   try {
@@ -70,16 +70,28 @@ exports.login = async (req, res) => {
     const result = await AuthService.login(email, password, role);
     res.json(result);
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message || RESPONSE_MESSAGES.SERVER_ERROR });
+    res.status(400).json({
+      success: false,
+      message: err.message || RESPONSE_MESSAGES.SERVER_ERROR,
+    });
   }
 };
 
 exports.register = async (req, res) => {
   try {
     const { email, password, name, location, role } = req.body;
-    const result = await AuthService.register(email, password, name, location, role);
+    const result = await AuthService.register(
+      email,
+      password,
+      name,
+      location,
+      role
+    );
     res.json(result);
   } catch (err) {
-    res.status(400).json({ success: false, message: err.message || RESPONSE_MESSAGES.SERVER_ERROR });
+    res.status(400).json({
+      success: false,
+      message: err.message || RESPONSE_MESSAGES.SERVER_ERROR,
+    });
   }
 };
