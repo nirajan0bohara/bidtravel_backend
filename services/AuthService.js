@@ -4,8 +4,8 @@ const { models } = require("../models");
 const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 class AuthService {
-  static async login(email, password, role) {
-    const user = await models.User.findOne({ where: { email, role } });
+  static async login(email, password) {
+    const user = await models.User.findOne({ where: { email } });
 
     if (!user) throw new Error(RESPONSE_MESSAGES.INVALID_CREDENTIALS);
 
@@ -14,13 +14,17 @@ class AuthService {
       throw new Error(RESPONSE_MESSAGES.INVALID_CREDENTIALS);
     }
 
-    if (role === "agency" && user.status !== "approved") {
+    if (user.role === "agency" && user.status !== "approved") {
       throw new Error("Agency not approved");
     }
 
-    const token = jwt.sign({ id: user.id, role }, process.env.JWT_SECRET, {
-      expiresIn: "30d",
-    });
+    const token = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "30d",
+      }
+    );
 
     return { success: true, token, user };
   }
