@@ -29,11 +29,11 @@ class AuthService {
     return { success: true, token, user };
   }
 
-  static async register(email, password, name, location, role) {
-    console.log("Register input:", { email, name, location, role });
+  static async register(email, password, name, location, role, phoneNumber) {
+    console.log("Register input:", { email, name, location, role, phoneNumber });
 
     // Input validation
-    if (!email || !password || !name || !role) {
+    if (!email || !password || !name || !location || !role || !phoneNumber) {
       console.log("Missing required fields");
       throw new Error("Missing required fields");
     }
@@ -53,8 +53,9 @@ class AuthService {
         email,
         password: hashedPassword,
         name,
-        location: role === "agency" ? location : null,
+        location, // Remove conditional logic, make it mandatory
         role,
+        phoneNumber, // Add phoneNumber
         status: role === "agency" ? "pending" : "approved",
       });
 
