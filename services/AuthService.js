@@ -60,7 +60,14 @@ class AuthService {
       });
 
       console.log("User created successfully:", user.id);
-      return { success: true, id: user.id };
+      const token = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
+      return { success: true, token, user };
     } catch (err) {
       console.error("Registration error:", err);
       if (err.name === "SequelizeUniqueConstraintError") {
