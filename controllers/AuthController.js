@@ -16,13 +16,14 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const { email, password, name, location, role } = req.body;
+    const { email, password, name, location, role, phoneNumber } = req.body; // Added phoneNumber
     const result = await AuthService.register(
       email,
       password,
       name,
       location,
-      role
+      role,
+      phoneNumber // Pass phoneNumber
     );
     res.json(result);
   } catch (err) {

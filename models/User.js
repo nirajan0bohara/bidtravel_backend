@@ -61,6 +61,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('user', 'agency', 'admin'),
       allowNull: false
     },
+    phoneNumber: {
+      type: DataTypes.STRING,
+      allowNull: false, 
+    },
     status: {
       type: DataTypes.ENUM('pending', 'approved', 'rejected'),
       defaultValue: 'pending'
