@@ -3,9 +3,10 @@ const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 exports.getProfile = async (req, res) => {
   try {
-    const user = await UserService.getProfile(req.user.id);
+    const user = await UserService.getProfile(req.query.id);
     res.json({ success: true, user });
   } catch (err) {
+    console.log("err at getProfile", err);
     res.status(400).json({
       success: false,
       message: err.message || RESPONSE_MESSAGES.SERVER_ERROR,
@@ -26,8 +27,11 @@ exports.updateProfile = async (req, res) => {
 };
 
 exports.getAllUsers = async (req, res) => {
+  console.log(req);
+  const userType = req.query.userType ?? "user";
+  console.log(userType);
   try {
-    const users = await UserService.getAllUsers();
+    const users = await UserService.getAllUsers(userType);
     res.json({ success: true, users });
   } catch (err) {
     res.status(403).json({
