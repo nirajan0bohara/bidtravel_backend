@@ -1,3 +1,6 @@
+const { RESPONSE_MESSAGES } = require("../utils/constants");
+const jwt = require("jsonwebtoken");
+
 exports.authMiddleware = (req, res, next) => {
   // Skip auth for register route
   if (req.path === "/register") return next();
@@ -13,6 +16,7 @@ exports.authMiddleware = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
+    console.log(err);
     res
       .status(403)
       .json({ success: false, message: RESPONSE_MESSAGES.INVALID_TOKEN });

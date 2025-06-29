@@ -30,7 +30,13 @@ class AuthService {
   }
 
   static async register(email, password, name, location, role, phoneNumber) {
-    console.log("Register input:", { email, name, location, role, phoneNumber });
+    console.log("Register input:", {
+      email,
+      name,
+      location,
+      role,
+      phoneNumber,
+    });
 
     // Input validation
     if (!email || !password || !name || !location || !role || !phoneNumber) {

@@ -1,19 +1,19 @@
-const { models } = require('../models');
+const { models, sequelize } = require("../models");
 
 class CreditService {
   static async assignCredits(agencyId, credits) {
-    const transaction = await models.sequelize.transaction();
+    const transaction = await sequelize.transaction();
     try {
       await models.CreditTransaction.create(
-        { agencyId, credits, type: 'add' },
+        { agencyId, credits, type: "add" },
         { transaction }
       );
-      
+
       await models.User.update(
-        { credits: models.sequelize.literal(`credits + ${credits}`) },
+        { credits: sequelize.literal(`credits + ${credits}`) },
         { where: { id: agencyId }, transaction }
       );
-      
+
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
