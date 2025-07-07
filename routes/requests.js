@@ -5,12 +5,17 @@ const {
   getRequestsByLocation,
   updateRequest,
   deleteRequest,
+  getRequestById,
 } = require("../controllers/RequestController");
 const { validateRequest } = require("../middlewares/validate");
+const { authMiddleware } = require("../middlewares/auth"); // Corrected import
 
 const router = express.Router();
 
-// Create a new travel request
+// Apply authentication middleware to all routes
+router.use(authMiddleware);
+
+// Create a new travel request (POST /api/requests)
 router.post("/", validateRequest, createRequest);
 
 // Get all travel requests for the authenticated user
