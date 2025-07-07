@@ -5,15 +5,15 @@ const {
   getRequestsByLocation,
   updateRequest,
   deleteRequest,
-  getRequestById
+  getRequestById,
 } = require("../controllers/RequestController");
 const { validateRequest } = require("../middlewares/validate");
-const { authenticate } = require("../middlewares/auth"); // Assuming you have auth middleware
+const { authMiddleware } = require("../middlewares/auth"); // Corrected import
 
 const router = express.Router();
 
 // Apply authentication middleware to all routes
-router.use(authenticate);
+router.use(authMiddleware);
 
 // Create a new travel request (POST /api/requests)
 router.post("/", validateRequest, createRequest);
