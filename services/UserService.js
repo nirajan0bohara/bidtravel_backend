@@ -14,7 +14,16 @@ class UserService {
   static async getAllUsers(userType) {
     return await models.User.findAll({
       where: { role: userType },
-      attributes: ["id", "name", "email", "location", "role", "status","phoneNumber"],
+      attributes: [
+        "id",
+        "name",
+        "email",
+        "location",
+        "role",
+        "status",
+        "phoneNumber",
+        "credits",
+      ],
     });
   }
 
