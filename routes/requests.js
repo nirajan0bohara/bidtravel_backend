@@ -5,24 +5,32 @@ const {
   getRequestsByLocation,
   updateRequest,
   deleteRequest,
+  getRequestById
 } = require("../controllers/RequestController");
 const { validateRequest } = require("../middlewares/validate");
+const { authenticate } = require("../middlewares/auth"); // Assuming you have auth middleware
 
 const router = express.Router();
 
-// Create a new travel request
+// Apply authentication middleware to all routes
+router.use(authenticate);
+
+// Create a new travel request (POST /api/requests)
 router.post("/", validateRequest, createRequest);
 
-// Get all travel requests for the authenticated user
+// Get all travel requests for the authenticated user (GET /api/requests/user)
 router.get("/user", getUserRequests);
 
-// Get travel requests visible to the authenticated agency (by location)
+// Get travel requests visible to the authenticated agency by location (GET /api/requests/location)
 router.get("/location", getRequestsByLocation);
 
-// Update an existing travel request
-router.put("/:id", validateRequest, updateRequest); // Added validateRequest if needed
+// Get a specific travel request by ID (GET /api/requests/:id)
+router.get("/:id", getRequestById);
 
-// Delete an existing travel request
+// Update an existing travel request (PUT /api/requests/:id)
+router.put("/:id", validateRequest, updateRequest);
+
+// Delete an existing travel request (DELETE /api/requests/:id)
 router.delete("/:id", deleteRequest);
 
 module.exports = { requestRouter: router };

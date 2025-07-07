@@ -2,56 +2,116 @@ const { models } = require('../models');
 
 class RequestService {
   static async createRequest(userId, { from, destination, startDate, travelers, preferences }) {
-    if (new Date(startDate) <= new Date()) throw new Error('Start date must be in the future');
-    if (travelers <= 0) throw new Error('Travelers must be a positive number');
-    if (!from || !destination) throw new Error('From and destination are required');
+    // Validation
+    if (new Date(startDate) <= new Date()) {
+      throw new Error('Start date must be in the future');
+    }
+    if (travelers <= 0) {
+      throw new Error('Travelers must be a positive number');
+    }
+    if (!from || !destination) {
+      throw new Error('From and destination are required');
+    }
+    if (from.trim() === '' || destination.trim() === '') {
+      throw new Error('From and destination cannot be empty');
+    }
+
     const request = await models.TravelRequest.create({
       userId,
-      from,
-      destination,
+      from: from.trim(),
+      destination: destination.trim(),
       startDate,
       travelers,
-      preferences
+      preferences: preferences ? preferences.trim() : null
     });
+    
     return request.id;
   }
 
   static async getUserRequests(userId) {
     return await models.TravelRequest.findAll({
-      where: { userId }
+      where: { userId },
+      include: [{
+        model: models.User,
+        as: 'User',
+        attributes: ['id', 'name', 'email', 'location']
+      }],
+      order: [['createdAt', 'DESC']]
     });
   }
 
   static async getRequestsByLocation(agencyId) {
+    // First get the agency's location
     const agency = await models.User.findByPk(agencyId);
+    if (!agency) {
+      throw new Error('Agency not found');
+    }
+
+    // Find all travel requests where the user is from the same location as the agency
     const requests = await models.TravelRequest.findAll({
       include: [{
         model: models.User,
-        where: { location: agency.location }
+        as: 'User',
+        where: { location: agency.location },
+        attributes: ['id', 'name', 'email', 'location']
       }],
-      where: { status: 'open' }
+      where: { status: 'open' },
+      order: [['createdAt', 'DESC']]
     });
+    
     return requests;
   }
 
   static async updateRequest(userId, requestId, { from, destination, startDate, travelers, preferences }) {
-    const request = await models.TravelRequest.findOne({ where: { id: requestId, userId } });
-    if (!request) throw new Error('Travel request not found or unauthorized');
-    if (new Date(startDate) <= new Date()) throw new Error('Start date must be in the future');
-    if (travelers <= 0) throw new Error('Travelers must be a positive number');
-    if (from && destination) {
-      await request.update({ from, destination, startDate, travelers, preferences });
-    } else {
-      await request.update({ startDate, travelers, preferences });
+    const request = await models.TravelRequest.findOne({ 
+      where: { id: requestId, userId } 
+    });
+    
+    if (!request) {
+      throw new Error('Travel request not found or unauthorized');
     }
+
+    // Validation
+    if (startDate && new Date(startDate) <= new Date()) {
+      throw new Error('Start date must be in the future');
+    }
+    if (travelers && travelers <= 0) {
+      throw new Error('Travelers must be a positive number');
+    }
+
+    // Prepare update data
+    const updateData = {};
+    if (from) updateData.from = from.trim();
+    if (destination) updateData.destination = destination.trim();
+    if (startDate) updateData.startDate = startDate;
+    if (travelers) updateData.travelers = travelers;
+    if (preferences !== undefined) updateData.preferences = preferences ? preferences.trim() : null;
+
+    await request.update(updateData);
     return true;
   }
 
   static async deleteRequest(userId, requestId) {
-    const request = await models.TravelRequest.findOne({ where: { id: requestId, userId } });
-    if (!request) throw new Error('Travel request not found or unauthorized');
+    const request = await models.TravelRequest.findOne({ 
+      where: { id: requestId, userId } 
+    });
+    
+    if (!request) {
+      throw new Error('Travel request not found or unauthorized');
+    }
+
     await request.destroy();
     return true;
+  }
+
+  static async getRequestById(requestId) {
+    return await models.TravelRequest.findByPk(requestId, {
+      include: [{
+        model: models.User,
+        as: 'User',
+        attributes: ['id', 'name', 'email', 'location']
+      }]
+    });
   }
 }
 
