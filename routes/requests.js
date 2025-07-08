@@ -6,6 +6,7 @@ const {
   updateRequest,
   deleteRequest,
   getRequestById,
+  updateRequestStatus,
 } = require("../controllers/RequestController");
 const { validateRequest } = require("../middlewares/validate");
 const { authMiddleware } = require("../middlewares/auth"); // Corrected import
@@ -26,6 +27,9 @@ router.get("/location", getRequestsByLocation);
 
 // Update an existing travel request
 router.put("/:id", validateRequest, updateRequest); // Added validateRequest if needed
+
+// Update request status only
+router.put("/:id/status", updateRequestStatus);
 
 // Delete an existing travel request
 router.delete("/:id", deleteRequest);
