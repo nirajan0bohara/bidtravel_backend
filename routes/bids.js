@@ -4,12 +4,13 @@ const {
   getBids,
   acceptBid,
 } = require("../controllers/BidController");
-const { validateBid } = require("../middlewares/validate");
+const { validateBid, authenticateToken } = require("../middlewares/validate"); 
 
 const router = express.Router();
 
-router.post("/", validateBid, submitBid);
-router.get("/:requestId", getBids);
-router.put("/:bidId/accept", acceptBid);
+// All routes need authentication since they access req.user
+router.post("/", authenticateToken, validateBid, submitBid);
+router.get("/:requestId", authenticateToken, getBids);
+router.put("/:bidId/accept", authenticateToken, acceptBid);
 
 module.exports = { bidRouter: router };
