@@ -1,4 +1,5 @@
 const { models } = require("../models");
+const { Op } = require("sequelize");
 
 class RequestService {
   static async createRequest(
@@ -52,13 +53,32 @@ class RequestService {
       throw new Error("Agency not found");
     }
 
-    // Find all travel requests where the user is from the same location as the agency
+    // Split agency location into keywords
+    const agencyLocationKeywords = agency.location
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((keyword) => keyword.length > 0);
+
+    if (agencyLocationKeywords.length === 0) {
+      throw new Error("Agency location is empty");
+    }
+
+    // Build the WHERE clause for keyword matching
+    const locationConditions = agencyLocationKeywords.map((keyword) => ({
+      location: {
+        [Op.like]: `%${keyword}%`,
+      },
+    }));
+
+    // Find all travel requests where the user's location matches any keyword from agency location
     const requests = await models.TravelRequest.findAll({
       include: [
         {
           model: models.User,
           as: "User",
-          where: { location: agency.location },
+          where: {
+            [Op.or]: locationConditions,
+          },
           attributes: ["id", "name", "email", "location"],
         },
       ],
