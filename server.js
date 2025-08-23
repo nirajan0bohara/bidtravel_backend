@@ -63,15 +63,34 @@ app.use((err, req, res, next) => {
 });
 
 // Listen
-sequelize
-  .sync({ force: false })
-  .then(async () => {
-    // await seedAdmin(); // Run the seeder
-    console.log("Database Connected Successfully!".green.bold);
-    server.listen(PORT, () => {
-      console.log(`Server is Running on port ${PORT}`.bgMagenta.white.bold);
+// Optional: sanitize invalid JSON in Bids.packageDetails before attempting JSON column alteration
+async function start() {
+  const enableAlter = process.env.DB_SYNC_ALTER === "true";
+  if (process.env.SANITIZE_BIDS_JSON === "true") {
+    try {
+      await sequelize.query(
+        "UPDATE Bids SET packageDetails='{}' WHERE packageDetails IS NULL OR JSON_VALID(packageDetails)=0"
+      );
+      console.log("Sanitized invalid Bids.packageDetails values");
+    } catch (e) {
+      console.warn(
+        "Sanitize step skipped (table may not exist yet):",
+        e.message
+      );
+    }
+  }
+
+  sequelize
+    .sync({ force: false, alter: enableAlter })
+    .then(async () => {
+      console.log("Database Connected Successfully!".green.bold);
+      server.listen(PORT, () => {
+        console.log(`Server is Running on port ${PORT}`.bgMagenta.white.bold);
+      });
+    })
+    .catch((error) => {
+      console.error("Error while connecting to database: ".red, error);
     });
-  })
-  .catch((error) => {
-    console.error("Error while connecting to database: ".red, error);
-  });
+}
+
+start();

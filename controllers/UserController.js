@@ -27,9 +27,9 @@ exports.updateProfile = async (req, res) => {
 };
 
 exports.getAllUsers = async (req, res) => {
-  console.log(req);
+  // console.log(req);
   const userType = req.query.userType ?? "user";
-  console.log(userType);
+  // console.log(userType);
   try {
     const users = await UserService.getAllUsers(userType);
     res.json({ success: true, users });
@@ -42,8 +42,6 @@ exports.getAllUsers = async (req, res) => {
 };
 
 exports.verifyAgency = async (req, res) => {
-  console.log("hello", req.body);
-  console.log("role", req.user.role);
   try {
     if (req.user.role !== "admin")
       throw new Error(RESPONSE_MESSAGES.UNAUTHORIZED);

@@ -1,51 +1,74 @@
-const { models } = require("../models");
+const { models, sequelize } = require("../models");
+const { Op } = require("sequelize");
 const { rankBids } = require("../utils/helpers");
 
 class BidService {
-  static async submitBid(agencyId, { requestId, price, packageDetails }) {
+  static async submitBid(agency, { requestId, price, duration, notes }, res) {
     if (price < 50) throw new Error("You must bid at least 50 credits");
     const request = await models.TravelRequest.findByPk(requestId);
     if (!request) throw new Error("Request not found");
+    // Ensure agency has not already placed a bid on this request
+    const existing = await models.Bid.findOne({
+      where: { requestId, agencyId: agency.id },
+    });
+    if (existing) {
+      return {
+        data: existing,
+        duplicate: true,
+      };
+    }
 
     const bid = await models.Bid.create({
       requestId,
-      agencyId,
+      agencyId: agency.id,
       price,
-      packageDetails,
+      packageDetails: {
+        ...request.toJSON(),
+        agency,
+        duration,
+        notes,
+      },
     });
-
-    return { bidId: bid.id, userId: request.userId };
+    console.log("biddddd", bid);
+    return bid;
   }
 
   static async getBids(requestId) {
+    const travelRequest = await models.TravelRequest.findByPk(requestId);
+    if (!travelRequest) return [];
+
     const bids = await models.Bid.findAll({
       where: { requestId },
       include: [
-        { model: models.User, as: "User", attributes: ["name", "rating"] },
+        { model: models.User, as: "Agency", attributes: ["name", "rating"] },
       ],
     });
+
     return rankBids(
       bids.map((bid) => ({
         ...bid.toJSON(),
-        name: bid.User.name,
-        rating: bid.User.rating,
-      }))
+        name: bid.Agency?.name,
+        rating: bid.Agency?.rating,
+      })),
+      travelRequest.toJSON()
     );
   }
 
   static async getAgencyBids(requestId, agencyId) {
     const bids = await models.Bid.findAll({
       where: { requestId, agencyId },
-      include: [{ model: models.User, as: 'User', attributes: ['name', 'rating'] }],
+      include: [
+        { model: models.User, as: "Agency", attributes: ["name", "rating"] },
+      ],
     });
-    return bids.map(bid => ({
+    return bids.map((bid) => ({
       ...bid.toJSON(),
-      packageDetails: JSON.parse(bid.packageDetails || '{}'),
+      packageDetails: bid.packageDetails || {},
     }));
   }
 
   static async acceptBid(bidId, userId, notifyUser) {
-    const transaction = await models.sequelize.transaction();
+    const transaction = await sequelize.transaction();
     try {
       const bid = await models.Bid.findByPk(bidId, { transaction });
       if (!bid) throw new Error("Bid not found");
@@ -63,7 +86,7 @@ class BidService {
         {
           where: {
             requestId: bid.requestId,
-            id: { [models.Sequelize.Op.ne]: bidId },
+            id: { [Op.ne]: bidId },
           },
           transaction,
         }
@@ -87,8 +110,9 @@ class BidService {
       notifyUser(userId, { message: "Bid accepted" });
 
       await transaction.commit();
+      return bid;
     } catch (err) {
-      await transaction.rollback();
+      if (transaction) await transaction.rollback();
       throw err;
     }
   }

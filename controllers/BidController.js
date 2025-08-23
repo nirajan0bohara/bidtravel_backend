@@ -1,4 +1,5 @@
 const { BidService } = require("../services/BidService");
+const { models } = require("../models");
 const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 exports.submitBid = async (req, res) => {
@@ -18,13 +19,23 @@ exports.submitBid = async (req, res) => {
       });
     }
 
-    console.log("Submitting bid for agency:", req.user.id);
-    console.log("Request body:", req.body);
+    const bid = await BidService.submitBid(
+      { id: req.user.id, name: req.user.name },
+      req.body,
+      res
+    );
 
-    const { bidId, userId } = await BidService.submitBid(req.user.id, req.body);
-    req.app.get("notifyUser")(userId, { message: "New bid received" });
+    if (bid.duplicate) {
+      return res.status(200).json({
+        success: true,
+        message: "Bid already exists",
+        data: bid.data,
+      });
+    }
 
-    res.json({ success: true, bidId });
+    req.app.get("notifyUser")(bid.userId, { message: "New bid received" });
+
+    res.json({ success: true, data: bid });
   } catch (err) {
     console.error("Submit bid error:", err);
     res.status(400).json({
@@ -64,46 +75,40 @@ exports.getBids = async (req, res) => {
 exports.getAgencyBids = async (req, res) => {
   try {
     if (!req.user) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'Authentication required' 
-      });
-    }
-    
-    if (req.user.role !== 'agency') {
-      return res.status(403).json({ 
-        success: false, 
-        message: 'Only agencies can view their own bids' 
-      });
-    }
-    
-    const { requestId } = req.params;
-    if (!requestId || isNaN(requestId)) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Invalid request ID' 
+      return res.status(401).json({
+        success: false,
+        message: "Authentication required",
       });
     }
 
-    const request = await models.TravelRequest.findByPk(requestId);
-    if (!request) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'Travel request not found' 
+    if (req.user.role !== "agency") {
+      return res.status(403).json({
+        success: false,
+        message: "Only agencies can view their own bids",
+      });
+    }
+
+    const agencyId = req.user.id;
+    if (!req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid agency ID",
       });
     }
 
     const bids = await models.Bid.findAll({
-      where: { requestId, agencyId: req.user.id },
-      include: [{ model: models.User, as: 'User', attributes: ['name', 'rating'] }],
+      where: { agencyId: agencyId },
+      include: [
+        { model: models.User, as: "Agency", attributes: ["name", "rating"] },
+      ],
     });
 
-    res.json({ success: true, bids: bids.map(bid => bid.toJSON()) });
+    res.json({ success: true, bids: bids.map((bid) => bid.toJSON()) });
   } catch (err) {
-    console.error('Get agency bids error:', err);
-    res.status(400).json({ 
-      success: false, 
-      message: err.message || RESPONSE_MESSAGES.SERVER_ERROR 
+    console.error("Get agency bids error:", err);
+    res.status(400).json({
+      success: false,
+      message: err.message || RESPONSE_MESSAGES.SERVER_ERROR,
     });
   }
 };
@@ -124,12 +129,17 @@ exports.acceptBid = async (req, res) => {
       });
     }
 
-    await BidService.acceptBid(
+    const bid = await BidService.acceptBid(
       req.params.bidId,
       req.user.id,
       req.app.get("notifyUser")
     );
-    res.json({ success: true });
+
+    res.json({
+      success: true,
+      message: "bid accepted successfully",
+      data: bid,
+    });
   } catch (err) {
     console.error("Accept bid error:", err);
     res.status(400).json({
