@@ -4,6 +4,7 @@ const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 exports.submitBid = async (req, res) => {
   // console.log(req.user);
+  console.log('Bid submission body:', req.body);
   try {
     if (!req.user) {
       return res.status(401).json({

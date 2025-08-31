@@ -30,6 +30,18 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },
+      duration: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      notes: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
+      agencyName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+      },
 
       packageDetails: {
         type: DataTypes.JSON,

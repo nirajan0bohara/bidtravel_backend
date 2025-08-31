@@ -22,11 +22,14 @@ class BidService {
       requestId,
       agencyId: agency.id,
       price,
+      duration,
+      notes,
+      agencyName: agency.name,
       packageDetails: {
         ...request.toJSON(),
         agency,
-        duration,
-        notes,
+        // duration,
+        // notes,
       },
     });
     console.log("biddddd", bid);
