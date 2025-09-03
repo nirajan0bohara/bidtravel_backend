@@ -1,7 +1,7 @@
 module.exports = (sequelize, DataTypes) => {
   const TravelRequest = sequelize.define(
     "TravelRequest",
-    {
+  {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -78,6 +78,16 @@ module.exports = (sequelize, DataTypes) => {
           len: {
             args: [0, 1000],
             msg: "Preferences cannot exceed 1000 characters",
+          },
+        },
+      },
+      phoneNumber: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        validate: {
+          len: {
+            args: [7, 20],
+            msg: "Phone number must be between 7 and 20 characters",
           },
         },
       },

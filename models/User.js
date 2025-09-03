@@ -69,6 +69,19 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('pending', 'approved', 'rejected'),
       defaultValue: 'pending'
     }
+    ,
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false
+    },
+    verificationToken: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    resetPasswordToken: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
   }, {
     timestamps: true,
     paranoid: true

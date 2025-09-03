@@ -4,6 +4,30 @@ const { models } = require("../models");
 const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 class AuthService {
+  static async generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+  }
+  static async sendVerificationEmail(user) {
+    const { sendMail } = require('../utils/mailer');
+    const otp = await AuthService.generateOTP();
+    await user.update({ verificationToken: otp });
+    await sendMail({
+      to: user.email,
+      subject: 'Verify your email',
+      html: `<p>Your email verification code is: <b>${otp}</b></p>`
+    });
+  }
+
+  static async sendResetPasswordEmail(user) {
+    const { sendMail } = require('../utils/mailer');
+    const otp = await AuthService.generateOTP();
+    await user.update({ resetPasswordToken: otp });
+    await sendMail({
+      to: user.email,
+      subject: 'Reset your password',
+      html: `<p>Your password reset code is: <b>${otp}</b></p>`
+    });
+  }
   static async login(email, password) {
     const user = await models.User.findOne({ where: { email } });
 
@@ -63,14 +87,16 @@ class AuthService {
         role,
         phoneNumber, // Add phoneNumber
         status: role === "agency" ? "pending" : "approved",
+        isVerified: false
       });
 
       console.log("User created successfully:", user.id);
+      await AuthService.sendVerificationEmail(user);
       const token = jwt.sign(
         { id: user.id, role: user.role },
         process.env.JWT_SECRET,
         {
-          expiresIn: "30d",
+          expiresIn: "1d",
         }
       );
       return { success: true, token, user };
@@ -85,6 +111,28 @@ class AuthService {
         throw new Error(err.message || "Registration failed");
       }
     }
+  }
+
+  static async verifyEmail(token) {
+  const user = await models.User.findOne({ where: { verificationToken: token } });
+  if (!user) throw new Error('Invalid or expired code');
+  await user.update({ isVerified: true, verificationToken: null });
+  return { success: true, message: 'Email verified' };
+  }
+
+  static async forgotPassword(email) {
+    const user = await models.User.findOne({ where: { email } });
+    if (!user) throw new Error('Email not found');
+    await AuthService.sendResetPasswordEmail(user);
+    return { success: true, message: 'Password reset email sent' };
+  }
+
+  static async resetPassword(email, otp, newPassword) {
+    const user = await models.User.findOne({ where: { email, resetPasswordToken: otp } });
+    if (!user) throw new Error('Invalid or expired code');
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await user.update({ password: hashedPassword, resetPasswordToken: null });
+    return { success: true, message: 'Password reset successful' };
   }
 }
 

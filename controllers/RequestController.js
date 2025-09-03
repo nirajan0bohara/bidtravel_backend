@@ -2,6 +2,7 @@ const { RequestService } = require("../services/RequestService");
 const { RESPONSE_MESSAGES } = require("../utils/constants");
 
 exports.createRequest = async (req, res) => {
+    console.log('Request body:', req.body);
   try {
     if (req.user.role !== "user") {
       return res.status(403).json({
@@ -10,7 +11,7 @@ exports.createRequest = async (req, res) => {
       });
     }
 
-    const { from, destination, startDate, travelers, preferences } = req.body;
+    const { from, destination, startDate, travelers, preferences, phoneNumber } = req.body;
 
     // Additional validation
     if (!from || !destination || !startDate || !travelers) {
@@ -26,6 +27,7 @@ exports.createRequest = async (req, res) => {
       startDate,
       travelers,
       preferences,
+      phoneNumber,
     });
 
     res.status(201).json({

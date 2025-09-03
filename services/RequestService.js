@@ -4,7 +4,7 @@ const { Op } = require("sequelize");
 class RequestService {
   static async createRequest(
     userId,
-    { from, destination, startDate, travelers, preferences }
+  { from, destination, startDate, travelers, preferences, phoneNumber }
   ) {
     // Validation
     if (new Date(startDate) <= new Date()) {
@@ -27,6 +27,7 @@ class RequestService {
       startDate,
       travelers,
       preferences: preferences ? preferences.trim() : null,
+      phoneNumber: phoneNumber || null,
     });
 
     return request.id;
